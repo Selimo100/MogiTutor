@@ -1,28 +1,25 @@
 // apps/web/lib/api.ts
 
 const isServer = typeof window === 'undefined';
-// Note: API_BASE still points to /api root generally, but we'll construct paths carefully.
-// The backend changed prefixes:
-// /api/modules -> Module routes
-// /api/files, /api/evidence -> General routes
+// API Base is /api
 const API_BASE = isServer 
   ? (process.env.INTERNAL_API_BASE_URL || 'http://api:8080/api') 
   : (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4180/api');
 
-export async function fetchModules() {
-  const res = await fetch(`${API_BASE}/modules`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to fetch modules');
+export async function fetchTutors() {
+  const res = await fetch(`${API_BASE}/tutors`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch tutors');
   return res.json();
 }
 
-export async function fetchCompetencies(moduleCode: string) {
-  const res = await fetch(`${API_BASE}/modules/${moduleCode}/competencies`, { cache: 'no-store' });
+export async function fetchCompetencies(tutorSlug: string, moduleCode: string) {
+  const res = await fetch(`${API_BASE}/tutors/${tutorSlug}/modules/${moduleCode}/competencies`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch stats');
   return res.json();
 }
 
-export async function fetchCompetency(moduleCode: string, code: string) {
-  const res = await fetch(`${API_BASE}/modules/${moduleCode}/competencies/${code}`, { cache: 'no-store' });
+export async function fetchCompetency(tutorSlug: string, moduleCode: string, code: string) {
+  const res = await fetch(`${API_BASE}/tutors/${tutorSlug}/modules/${moduleCode}/competencies/${code}`, { cache: 'no-store' });
   if (!res.ok) {
      if (res.status === 404) return null;
      throw new Error('Failed to fetch competency');
@@ -30,8 +27,8 @@ export async function fetchCompetency(moduleCode: string, code: string) {
   return res.json();
 }
 
-export async function updateCompetency(moduleCode: string, code: string, data: any) {
-  const res = await fetch(`${API_BASE}/modules/${moduleCode}/competencies/${code}`, {
+export async function updateCompetency(tutorSlug: string, moduleCode: string, code: string, data: any) {
+  const res = await fetch(`${API_BASE}/tutors/${tutorSlug}/modules/${moduleCode}/competencies/${code}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -40,33 +37,29 @@ export async function updateCompetency(moduleCode: string, code: string, data: a
   return res.json();
 }
 
-export async function uploadEvidence(moduleCode: string, code: string, file: File) {
+export async function uploadEvidence(tutorSlug: string, moduleCode: string, code: string, file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  // Endpoint expects param names
-  const res = await fetch(`${API_BASE}/modules/${moduleCode}/competencies/${code}/evidence`, {
+  
+  const res = await fetch(`${API_BASE}/tutors/${tutorSlug}/modules/${moduleCode}/competencies/${code}/evidence`, {
     method: 'POST',
     body: formData,
   });
   if (!res.ok) {
-     const text = await res.text();
-     throw new Error(text || 'Upload failed');
+     const error = await res.json();
+     throw new Error(error.error || 'Upload failed');
   }
   return res.json();
 }
 
+export function getFileUrl(assetId: string) {
+  // Always use client-side URL for this as it's used in <img> src
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4180/api';
+  return `${base}/files/${assetId}`;
+}
+
 export async function deleteEvidence(evidenceId: string) {
-    const res = await fetch(`${API_BASE}/evidence/${evidenceId}`, {
-        method: 'DELETE'
-    });
-    if (!res.ok) throw new Error('Delete failed');
+    const res = await fetch(`${API_BASE}/evidence/${evidenceId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed delete');
     return res.json();
 }
-
-export function getFileUrl(fileId: string) {
-    return `${API_BASE}/files/${fileId}`;
-}
-
-// Deprecated or re-mapped legacy calls if needed (but we should migrate all callers)
-// export async function fetchAllCompetencies(module = 'M347') -> fetchCompetencies(module)
-

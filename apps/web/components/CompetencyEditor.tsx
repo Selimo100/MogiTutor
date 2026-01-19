@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { updateCompetency, uploadEvidence, deleteEvidence, getFileUrl } from '@/lib/api';
 import { Section } from './Section';
-import { CodeBlock } from './CodeBlock';
 import { useRouter } from 'next/navigation';
 import { ExternalLink, Trash2, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Image from 'next/image';
@@ -16,14 +15,13 @@ interface Evidence {
     id: string;
     originalName: string;
     mimeType: string;
-    width?: number; // Added
-    height?: number; // Added
+    width?: number; 
+    height?: number;
   };
 }
 
 interface Competency {
   id: string;
-  module: string; 
   code: string;
   title: string;
   level: string;
@@ -33,18 +31,20 @@ interface Competency {
   learningGoal?: string;
   status: 'open' | 'in_progress' | 'done';
   tags: string[];
+  evidence?: Evidence[];
 }
 
 interface CompetencyEditorProps {
   competency: Competency;
-  evidence: Evidence[];
+  tutorSlug: string;
+  moduleCode: string;
 }
 
-export function CompetencyEditor({ competency: initialData, evidence: initialEvidence }: CompetencyEditorProps) {
+export function CompetencyEditor({ competency: initialData, tutorSlug, moduleCode }: CompetencyEditorProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [data, setData] = useState(initialData);
-  const [evidence, setEvidence] = useState(initialEvidence);
+  const [evidence, setEvidence] = useState<Evidence[]>(initialData.evidence || []);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<{url: string, title: string} | null>(null);
@@ -52,7 +52,7 @@ export function CompetencyEditor({ competency: initialData, evidence: initialEvi
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateCompetency(data.module, data.code, {
+      await updateCompetency(tutorSlug, moduleCode, data.code, {
         summary: data.summary,
         implementationNotes: data.implementationNotes,
         reflection: data.reflection,
@@ -74,7 +74,7 @@ export function CompetencyEditor({ competency: initialData, evidence: initialEvi
     if (!e.target.files?.length) return;
     const file = e.target.files[0];
     
-    // Client-side Validation (filesize)
+    // Client-side Validation
     const isImage = file.type.startsWith('image/');
     if (isImage && file.size > 10 * 1024 * 1024) {
         alert('Image too large (max 10MB)');
@@ -89,9 +89,8 @@ export function CompetencyEditor({ competency: initialData, evidence: initialEvi
 
     setIsUploading(true);
     try {
-      // Changed to uploadEvidence
-      const newEvidence = await uploadEvidence(data.module, data.code, file);
-      setEvidence([newEvidence, ...evidence]);
+      const newEvidence = await uploadEvidence(tutorSlug, moduleCode, data.code, file);
+      setEvidence([newEvidence, ...evidence]); // Prepend logic
       router.refresh();
     } catch (e) {
         alert('Upload failed. Please check file type and size.');
@@ -174,8 +173,9 @@ export function CompetencyEditor({ competency: initialData, evidence: initialEvi
             <button 
                 onClick={() => window.print()}
                 className="px-3 py-2 border rounded-md text-sm hover:bg-muted transition-colors"
+                title="Print to PDF"
             >
-                Export PDF
+                Start Print
             </button>
             <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}

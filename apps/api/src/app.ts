@@ -31,7 +31,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   });
 
   // Routes
-  await app.register(competencyRoutes, { prefix: '/api/modules' });
+  await app.register(competencyRoutes, { prefix: '/api' });
   await app.register(evidenceRoutes, { prefix: '/api' }); // General evidence/file routes
 
   return app;

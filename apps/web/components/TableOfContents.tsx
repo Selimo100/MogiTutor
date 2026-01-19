@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { guideContent } from '@/data/content';
+import { guideContent, Section } from '@/data/content';
 
-export function TableOfContents() {
+interface TableOfContentsProps {
+  content?: Section[];
+}
+
+export function TableOfContents({ content = guideContent }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>('');
 
   useEffect(() => {
@@ -19,19 +23,19 @@ export function TableOfContents() {
       { rootMargin: '-10% 0px -80% 0px' }
     );
 
-    guideContent.forEach((section) => {
+    content.forEach((section) => {
       const element = document.getElementById(section.id);
       if (element) observer.observe(element);
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [content]);
 
   return (
     <nav className="hidden lg:block sticky top-24 self-start max-h-[calc(100vh-6rem)] overflow-y-auto pl-4 border-l border-border/40">
       <h5 className="font-semibold mb-4 text-sm text-foreground/80">On this page</h5>
       <ul className="space-y-1">
-        {guideContent.map((section) => (
+        {content.map((section) => (
           <li key={section.id}>
             <a
               href={`#${section.id}`}

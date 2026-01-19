@@ -8,12 +8,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Tutor {
+  id      String   @id @default(uuid())
+  slug    String   @unique // "docker", "sql"
+  name    String
+  modules Module[]
+}
+
+model Module {
+  id           String       @id @default(uuid())
+  code         String       // "M347", "SQL-Basics"
+  title        String
+  tutorId      String
+  tutor        Tutor        @relation(fields: [tutorId], references: [id])
+  competencies Competency[]
+
+  @@unique([tutorId, code])
+}
+
 model Competency {
   id                  String     @id @default(uuid())
   code                String     // e.g. "A1G"
   title               String
   level               String     // "G", "F", "E"
-  module              String     // "M347", "M346"
+  
+  // Legacy field support (will be migrated)
+  // module              String? 
+
+  moduleId            String
+  module              Module     @relation(fields: [moduleId], references: [id])
   
   summary             String?    @db.Text
   implementationNotes String?    @db.Text
@@ -29,8 +52,8 @@ model Competency {
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
-  @@unique([module, code])
-  @@index([module])
+  @@unique([moduleId, code])
+  @@index([moduleId])
   @@index([status])
 }
 

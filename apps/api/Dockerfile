@@ -20,6 +20,8 @@ RUN npx prisma generate
 
 # Build
 RUN pnpm run build
+# Compile seed script
+RUN npx tsc prisma/seed.ts --outDir dist --skipLibCheck --module commonjs --target es2019 --moduleResolution node --esModuleInterop
 
 # Deploy prod deps
 WORKDIR /app

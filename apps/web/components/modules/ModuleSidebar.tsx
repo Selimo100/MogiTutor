@@ -9,10 +9,11 @@ import { CompetencyBand } from '@/data/m347';
 
 interface ModuleSidebarProps {
   moduleCode: string; // e.g., "M347"
+  tutorId: string;
   data: CompetencyBand[];
 }
 
-export function ModuleSidebar({ moduleCode, data }: ModuleSidebarProps) {
+export function ModuleSidebar({ moduleCode, tutorId, data }: ModuleSidebarProps) {
   const pathname = usePathname();
   // State to manage which sections are open. By default, open them all or logic to open based on current path
   const [openSections, setOpenSections] = useState<string[]>(data.map(d => d.id));
@@ -23,7 +24,7 @@ export function ModuleSidebar({ moduleCode, data }: ModuleSidebarProps) {
     );
   };
 
-  const moduleRootPath = `/modules/${moduleCode}`;
+  const moduleRootPath = `/tutors/${tutorId}/modules/${moduleCode}`;
 
   return (
     <aside className="w-64 shrink-0 border-r border-border h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto hidden md:block bg-background/50 backdrop-blur-sm print:hidden">
@@ -63,7 +64,7 @@ export function ModuleSidebar({ moduleCode, data }: ModuleSidebarProps) {
                   <div className="pl-4 space-y-1 relative border-l border-border/50 ml-2">
                     {band.rows.map((row, idx) => (
                         row.competencies.map((comp) => {
-                            const compPath = `${moduleRootPath}/${comp.code}`; // Using code instead of ID
+                            const compPath = `${moduleRootPath}/competencies/${comp.code}`; // Using code instead of ID
                             const isActive = pathname === compPath;
                             return (
                                 <Link

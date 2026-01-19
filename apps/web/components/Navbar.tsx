@@ -10,7 +10,7 @@ export function Navbar() {
           <div className="relative w-14 h-14 transition-transform group-hover:scale-105 duration-300 drop-shadow-sm">
              <Image 
                src="/logo.png" 
-               alt="DockTutor Logo" 
+               alt="Logo" 
                fill
                sizes="56px"
                className="object-contain"
@@ -18,7 +18,7 @@ export function Navbar() {
              />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-2xl tracking-tight leading-none">Dock<span className="text-primary">Tutor</span></span>
+            <span className="font-bold text-2xl tracking-tight leading-none">Mogi<span className="text-primary">Tutor</span></span>
             <span className="text-xs text-muted-foreground font-medium tracking-wider uppercase">Learning Platform</span>
           </div>
         </Link>
@@ -26,8 +26,11 @@ export function Navbar() {
         {/* Right side alignment for module name and tools */}
         <div className="flex items-center gap-8">
             <nav className="hidden md:flex gap-8 items-center">
-                <Link href="/modules/M347" className="text-lg font-bold text-foreground/80 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-muted/50">
+                <Link href="/tutors/docktutor/modules/M347" className="text-lg font-bold text-foreground/80 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-muted/50">
                     M347
+                </Link>
+                <Link href="/tutors/sqltutor/modules/M165" className="text-lg font-bold text-foreground/80 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-muted/50">
+                    M165
                 </Link>
             </nav>
 

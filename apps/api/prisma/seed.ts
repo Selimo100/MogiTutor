@@ -46,19 +46,78 @@ const M347_DATA = [
   { code: 'F1E', level: 'E', title: 'Sicherheitslücken fixen', description: 'Ich kann bei einem vorgegebenen Container-Image die grundlegendsten Sicherheitslücken überprüfen und beseitigen.' },
 ];
 
-const M346_DATA = [
-  // A - Cloud Grundlagen (Examples)
-  { code: 'A1G', level: 'G', title: 'Cloud Definition', description: 'Ich kann Cloud Computing definieren und Hauptmerkmale nennen.' },
-  { code: 'A1F', level: 'F', title: 'Service Modelle', description: 'Ich kann IaaS, PaaS und SaaS unterscheiden.' },
-  // Duplicate code test
-  { code: 'D1G', level: 'G', title: 'CLI Tools', description: 'Ich kann CLI Tools für Cloud Provider installieren und nutzen.' },
+const M165_DATA = [
+  // A - NoSQL Grundlagen
+  { code: 'A1G', level: 'G', title: 'Begriffe und Konzepte', description: 'Ich kann Begriffe und Konzepte der NoSQL Datenbanken erläutern. (z. B. CAP-Theorem, BASE, ACID, Indexing Strukturen, Caching, Datenanalyse, Datawarehouse, FullText Search, Netzwerke, Testing).' },
+  { code: 'A1F', level: 'F', title: 'Datenbank Auswahl', description: 'Ich kann eine NoSQL Datenbank gezielt für eine spezifische Anwendung auswählen. (z. B. Document Store für Videos)' },
+  { code: 'A1E', level: 'E', title: 'Einsatz hinterfragen', description: 'Ich kann den Einsatz einer NoSQL Datenbank kritisch hinterfragen und Verbesserungen vorschlagen.' },
+  
+  // B - NoSQL Datenbank implementieren
+  { code: 'B1G', level: 'G', title: 'Datenmodell interpretieren', description: 'Ich kann ein Datenmodell für eine NoSQL Datenbank interpretieren und erläutern.' },
+  { code: 'B1F', level: 'F', title: 'Datenmodell umsetzen', description: 'Ich kann ein vorgegebenes Datenmodell mit einer NoSQL Datenbank umsetzen.' },
+  { code: 'B1E', level: 'E', title: 'Datenmodell entwerfen', description: 'Ich kann ein Datenmodell für eine NoSQL Datenbank entwerfen.' },
+
+  // C - Daten in NoSQL Datenbank eintragen
+  { code: 'C1G', level: 'G', title: 'Datenstruktur erläutern', description: 'Ich kann die Struktur von Daten in einer NoSQL Datenbank erläutern.' },
+  { code: 'C1F', level: 'F', title: 'Daten übernehmen', description: 'Ich kann Daten in eine NoSQL Datenbank übernehmen.' },
+  { code: 'C1E', level: 'E', title: 'Import Probleme lösen', description: 'Ich kann Probleme bei der Übernahme von Daten in eine NoSQL Datenbank erkennen und Lösungen aufzeigen.' },
+
+  // D - Zugriffsberechtigungen anwenden
+  { code: 'D1G', level: 'G', title: 'Berechtigungskonzepte', description: 'Ich kann die Funktion von Zugriffsberechtigungen in einer NoSQL Datenbank erläutern. (Benutzer, Rollen, Zugriffsrechte)' },
+  { code: 'D1F', level: 'F', title: 'Berechtigungen umsetzen', description: 'Ich kann vordefinierte Zugriffsberechtigungen in einer NoSQL Datenbank umsetzen. (z. B. Rollen)' },
+  { code: 'D1E', level: 'E', title: 'Berechtigungskonzept', description: 'Ich kann ein Konzept für Zugriffsberechtigungen einer NoSQL Datenbank entwerfen.' },
+
+  // E - Backup erstellen Restore durchführen
+  { code: 'E1G', level: 'G', title: 'Backup Konzepte', description: 'Ich kann Konzepte für ein Backup einer NoSQL Datenbank erläutern. (z. B. on-demand snapshots, continous cloud backups, legacy backups)' },
+  { code: 'E1F', level: 'F', title: 'Backup und Restore', description: 'Ich kann ein Backup und Restore bei einer NoSQL Datenbank anwenden.' },
+  { code: 'E1E', level: 'E', title: 'Backup Konzept', description: 'Ich kann ein Konzept für das Backup einer NoSQL Datenbank erstellen.' },
+
+  // F - Skalierung und Replikation bei einer NoSQL Datenbank anwenden
+  { code: 'F1G', level: 'G', title: 'Skalierung Prinzipien', description: 'Ich kann das Prinzip der Skalierung und die unterschiedlichen Replikationsarten für eine NoSQL Datenbank erläutern. (z. B. Multimaster, primary and replica, Aktiv-Passiv und horizontale Skalierung)' },
+  { code: 'F1F', level: 'F', title: 'Replikation anwenden', description: 'Ich kann für eine NoSQL Datenbank eine Replikation anwenden.' },
+  { code: 'F1E', level: 'E', title: 'Skalierungskonzept', description: 'Ich kann ein Konzept für die Skalierung einer NoSQL Datenbank erstellen.' },
+
+  // G - Anbindung an NoSQL Datenbank erstellen
+  { code: 'G1G', level: 'G', title: 'Zugriffsprinzipien', description: 'Ich kann das Prinzip des Zugriffes bei einer NoSQL Datenbank erläutern. (z. B. Queries, Projections)' },
+  { code: 'G1F', level: 'F', title: 'Anbindung implementieren', description: 'Ich kann eine Anbindung an eine NoSQL Datenbank implementieren. (z. B. API)' },
+  { code: 'G1E', level: 'E', title: 'Parallele Verarbeitung', description: 'Ich kann das Prinzip der parallelen Verarbeitung bei NoSQL Datenbanken anwenden. (z. B. MapReduce Algorithmen)' },
 ];
 
-async function seedModule(moduleName: string, data: typeof M347_DATA) {
+async function seedModule(tutorSlug: string, moduleCode: string, moduleTitle: string, data: any[]) {
+  // 1. Get or Create Tutor
+  const tutor = await prisma.tutor.findUnique({ where: { slug: tutorSlug } });
+  
+  if (!tutor) {
+      console.error(`Tutor ${tutorSlug} not found. Please seed tutors first.`);
+      return;
+  }
+
+  // 2. Get or Create Module
+  let module = await prisma.module.findUnique({
+      where: {
+          tutorId_code: {
+              tutorId: tutor.id,
+              code: moduleCode
+          }
+      }
+  });
+
+  if (!module) {
+      module = await prisma.module.create({
+          data: {
+              code: moduleCode,
+              title: moduleTitle,
+              tutor: { connect: { id: tutor.id } }
+          }
+      });
+      console.log(`Created Module ${moduleCode} for ${tutorSlug}`);
+  }
+
+  // 3. Seed Competencies
   for (const item of data) {
     const uniqueConstraint = {
-      module_code: {
-        module: moduleName,
+      moduleId_code: {
+        moduleId: module.id,
         code: item.code
       }
     };
@@ -68,17 +127,17 @@ async function seedModule(moduleName: string, data: typeof M347_DATA) {
     });
 
     if (!exists) {
-      const res = await prisma.competency.create({
+      await prisma.competency.create({
         data: {
           code: item.code,
           title: item.title,
           summary: item.description,
           level: item.level,
-          module: moduleName,
+          moduleId: module.id,
           status: 'open'
         }
       });
-      console.log(`Created ${moduleName}/${item.code}`);
+      console.log(`Created Competency ${moduleCode}/${item.code}`);
     } else {
         // Update title/desc if needed
         await prisma.competency.update({
@@ -88,7 +147,7 @@ async function seedModule(moduleName: string, data: typeof M347_DATA) {
                 summary: item.description
             }
         });
-        console.log(`Updated ${moduleName}/${item.code}`);
+        console.log(`Updated Competency ${moduleCode}/${item.code}`);
     }
   }
 }
@@ -96,10 +155,27 @@ async function seedModule(moduleName: string, data: typeof M347_DATA) {
 async function main() {
   console.log(`Start seeding ...`);
 
-  await seedModule('M347', M347_DATA);
-  await seedModule('M346', M346_DATA);
+  // 1. Seed Tutors
+  const dockTutor = await prisma.tutor.upsert({
+      where: { slug: 'docktutor' },
+      update: { name: 'DockerTutor' },
+      create: { slug: 'docktutor', name: 'DockerTutor' }
+  });
+  console.log(`Seeded Tutor: ${dockTutor.name}`);
 
-  console.log(`Seeding finished.`);
+  const sqlTutor = await prisma.tutor.upsert({
+      where: { slug: 'sqltutor' },
+      update: { name: 'SQLTutor' },
+      create: { slug: 'sqltutor', name: 'SQLTutor' }
+  });
+  console.log(`Seeded Tutor: ${sqlTutor.name}`);
+
+  // 2. Seed Modules & Competencies
+  await seedModule('docktutor', 'M347', 'Dienst mit Containern', M347_DATA);
+  
+  await seedModule('sqltutor', 'M165', 'NoSQL Datenbanken', M165_DATA);
+
+  console.log('Seeding finished.');
 }
 
 main()

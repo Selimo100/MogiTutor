@@ -10,7 +10,7 @@ import crypto from 'crypto';
 import sharp from 'sharp';
 
 const pump = util.promisify(pipeline);
-const UPLOAD_DIR = '/data/uploads';
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
 // Ensure upload dir exists
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -46,33 +46,47 @@ const CompetencyUpdateSchema = z.object({
 export async function competencyRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  // GET /api/modules - List all modules with stats
-  server.get('/', async (req, reply) => {
-    // Group by module and status
-    const stats = await prisma.competency.groupBy({
-      by: ['module', 'status'],
-      _count: {
-        status: true
+  // GET /tutors - List all tutors with modules and aggregated stats
+  server.get('/tutors', async (req, reply) => {
+    const tutors = await prisma.tutor.findMany({
+      include: {
+        modules: {
+          include: {
+            competencies: {
+                select: { status: true }
+            }
+          }
+        }
       }
     });
 
-    // Transform into nice format
-    const modules: Record<string, any> = {};
-    for (const s of stats) {
-      if (!modules[s.module]) {
-        modules[s.module] = { module: s.module, total: 0, done: 0, open: 0, in_progress: 0 };
-      }
-      modules[s.module][s.status] += s._count.status;
-      modules[s.module].total += s._count.status;
-    }
+    // Transform into frontend-friendly format with stats
+    const result = tutors.map(tutor => ({
+      slug: tutor.slug,
+      name: tutor.name,
+      modules: tutor.modules.map(module => {
+         const stats = module.competencies.reduce((acc, curr) => {
+             acc[curr.status] = (acc[curr.status] || 0) + 1;
+             acc.total += 1;
+             return acc;
+         }, { total: 0, open: 0, in_progress: 0, done: 0 } as any);
+         
+         return {
+             code: module.code,
+             title: module.title,
+             stats
+         };
+      })
+    }));
 
-    return Object.values(modules);
+    return result;
   });
 
-  // GET /api/modules/:module/competencies
-  server.get('/:module/competencies', {
+  // GET /tutors/:tutorSlug/modules/:moduleCode/competencies
+  // List competencies for a specific module
+  server.get('/tutors/:tutorSlug/modules/:moduleCode/competencies', {
     schema: {
-      params: z.object({ module: z.string() }),
+      params: z.object({ tutorSlug: z.string(), moduleCode: z.string() }),
       querystring: z.object({
         level: z.string().optional(),
         tag: z.string().optional(),
@@ -80,11 +94,21 @@ export async function competencyRoutes(app: FastifyInstance) {
       })
     }
   }, async (req, reply) => {
-    const { module } = req.params;
+    const { tutorSlug, moduleCode } = req.params;
     const { level, tag, status } = req.query;
     
+    // Find module ID first
+    const module = await prisma.module.findFirst({
+        where: {
+            code: moduleCode,
+            tutor: { slug: tutorSlug }
+        }
+    });
+
+    if (!module) return reply.code(404).send({ error: 'Module not found' });
+
     // Build where clause
-    const where: any = { module };
+    const where: any = { moduleId: module.id };
     if (level) where.level = level;
     if (status) where.status = status;
     if (tag) where.tags = { has: tag };
@@ -96,17 +120,21 @@ export async function competencyRoutes(app: FastifyInstance) {
     return competencies;
   });
 
-  // GET /api/modules/:module/competencies/:code
-  server.get('/:module/competencies/:code', {
+  // GET /tutors/:tutorSlug/modules/:moduleCode/competencies/:code
+  server.get('/tutors/:tutorSlug/modules/:moduleCode/competencies/:code', {
     schema: {
-      params: z.object({ module: z.string(), code: z.string() })
+      params: z.object({ tutorSlug: z.string(), moduleCode: z.string(), code: z.string() })
     }
   }, async (req, reply) => {
-    const { module, code } = req.params;
+    const { tutorSlug, moduleCode, code } = req.params;
+    
     const competency = await prisma.competency.findFirst({
         where: { 
-          module,
-          code: { equals: code, mode: 'insensitive' }
+          code: { equals: code, mode: 'insensitive' },
+          module: {
+              code: moduleCode,
+              tutor: { slug: tutorSlug }
+          }
         },
         include: {
             evidence: {
@@ -122,24 +150,27 @@ export async function competencyRoutes(app: FastifyInstance) {
     return competency;
   });
 
-  // PATCH /api/modules/:module/competencies/:code
-  server.patch('/:module/competencies/:code', {
+  // PATCH /tutors/:tutorSlug/modules/:moduleCode/competencies/:code
+  server.patch('/tutors/:tutorSlug/modules/:moduleCode/competencies/:code', {
     schema: {
-      params: z.object({ module: z.string(), code: z.string() }),
+      params: z.object({ tutorSlug: z.string(), moduleCode: z.string(), code: z.string() }),
       body: CompetencyUpdateSchema
     }
   }, async (req, reply) => {
-    const { module, code } = req.params;
+    const { tutorSlug, moduleCode, code } = req.params;
     const data = req.body;
     
     const existing = await prisma.competency.findFirst({
         where: { 
-            module,
-            code: { equals: code, mode: 'insensitive' }
+            code: { equals: code, mode: 'insensitive' },
+            module: {
+                code: moduleCode,
+                tutor: { slug: tutorSlug }
+            }
         }
     });
 
-    if (!existing) return reply.code(404).send({ error: 'Not found' });
+    if (!existing) return reply.code(404).send({ error: 'Competency not found' });
 
     const updateData: any = { ...data };
     if (data.steps) {
@@ -155,15 +186,18 @@ export async function competencyRoutes(app: FastifyInstance) {
     return updated;
   });
 
-  // POST /api/modules/:module/competencies/:code/evidence
-  server.post('/:module/competencies/:code/evidence', async (req, reply) => {
-    const { module, code } = req.params as { module: string, code: string };
+  // POST /tutors/:tutorSlug/modules/:moduleCode/competencies/:code/evidence
+  server.post('/tutors/:tutorSlug/modules/:moduleCode/competencies/:code/evidence', async (req, reply) => {
+    const { tutorSlug, moduleCode, code } = req.params as { tutorSlug: string, moduleCode: string, code: string };
     
     // 1. Verify Competency
     const competency = await prisma.competency.findFirst({
         where: { 
-            module,
-            code: { equals: code, mode: 'insensitive' }
+            code: { equals: code, mode: 'insensitive' },
+            module: {
+                code: moduleCode,
+                tutor: { slug: tutorSlug }
+            }
         }
     });
 
@@ -205,13 +239,10 @@ export async function competencyRoutes(app: FastifyInstance) {
             let isValidHeader = false;
             
             if (mimetype === 'application/pdf') {
-                // %PDF- (25 50 44 46 2D)
                 if (buffer.toString('utf8', 0, 5) === '%PDF-') isValidHeader = true;
             } else if (mimetype === 'image/png') {
-                // 89 50 4E 47 0D 0A 1A 0A
                 if (header.startsWith('89504E470D0A1A0A')) isValidHeader = true; 
             } else if (mimetype === 'image/jpeg' || mimetype === 'image/jpg') {
-                // FF D8
                 if (header.startsWith('FFD8')) isValidHeader = true;
             }
 
@@ -235,15 +266,12 @@ export async function competencyRoutes(app: FastifyInstance) {
                 const metadata = await image.metadata();
                 width = metadata.width;
                 height = metadata.height;
-                // Strip Metadata (Exif) and save
                 await image.rotate().withMetadata({ density: undefined }).toFile(storagePath);
             } else {
-                // Write PDF
                 fs.writeFileSync(storagePath, buffer);
             }
 
             // Create DB Entry
-            // fileType needs to catch the Enum "pdf" | "image" which matches our string 'pdf'/'image'
             evidenceCreated = await prisma.evidence.create({
                 data: {
                     competencyId: competency.id,
@@ -254,7 +282,7 @@ export async function competencyRoutes(app: FastifyInstance) {
                         create: {
                             originalName: filename,
                             mimeType: mimetype,
-                            fileType: fileType as any, // Cast to Enum
+                            fileType: fileType as any, 
                             sizeBytes: size,
                             sha256,
                             storagePath: storedFileName,
@@ -265,7 +293,7 @@ export async function competencyRoutes(app: FastifyInstance) {
                 },
                 include: { fileAsset: true }
             });
-            break; // Single file only
+            break; 
         } catch (e: any) {
             console.error(e);
             return reply.code(400).send({ error: e.message || 'Upload failed' });

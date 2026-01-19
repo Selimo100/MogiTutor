@@ -9,7 +9,7 @@ import { pipeline } from 'stream';
 import util from 'util';
 
 const pump = util.promisify(pipeline);
-const UPLOAD_DIR = '/data/uploads';
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
 // Ensure upload dir exists
 if (!fs.existsSync(UPLOAD_DIR)) {
