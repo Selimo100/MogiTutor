@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Competency {
+  id                  String     @id @default(uuid())
+  code                String     // e.g. "A1G"
+  title               String
+  level               String     // "G", "F", "E"
+  module              String     // "M347", "M346"
+  
+  summary             String?    @db.Text
+  implementationNotes String?    @db.Text
+  reflection          String?    @db.Text
+  learningGoal        String?    @db.Text
+  
+  status              String     @default("open") // "open", "in_progress", "done"
+  stepsJson           Json?
+  tags                String[]   @default([])
+
+  evidence            Evidence[]
+
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@unique([module, code])
+  @@index([module])
+  @@index([status])
+}
+
+model Evidence {
+  id           String      @id @default(uuid())
+  
+  competency   Competency  @relation(fields: [competencyId], references: [id])
+  competencyId String
+  
+  type         String      // "pdf", "image", "link", "terminal"
+  title        String
+  description  String?
+  
+  fileAsset    FileAsset?
+
+  createdAt    DateTime    @default(now())
+}
+
+enum FileType {
+  pdf
+  image
+}
+
+model FileAsset {
+  id           String    @id @default(uuid())
+  
+  evidence     Evidence  @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  evidenceId   String    @unique
+  
+  originalName String
+  mimeType     String
+  fileType     FileType
+  sizeBytes    Int
+  sha256       String
+  storagePath  String
+  
+  width        Int?      // For images
+  height       Int?      // For images
+
+  createdAt    DateTime  @default(now())
+
+  @@index([fileType])
+}

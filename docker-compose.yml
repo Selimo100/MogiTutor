@@ -1,0 +1,55 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "4173:4173"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:4180/api
+    depends_on:
+      - api
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "4180:8080"
+    environment:
+      - DATABASE_URL=postgresql://docktutor:docktutor@db:5432/docktutor?schema=public
+    volumes:
+      - docktutor_uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma migrate deploy && node dist/src/index.js"
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=docktutor
+      - POSTGRES_PASSWORD=docktutor
+      - POSTGRES_DB=docktutor
+    ports:
+      - "55432:5432"
+    volumes:
+      - docktutor_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docktutor"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    ports:
+      - "4181:8080"
+    depends_on:
+      - db
+
+volumes:
+  docktutor_db:
+  docktutor_uploads:

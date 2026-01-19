@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  docktutor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: docktutor
+    container_name: docktutor
+    ports:
+      - "${PORT:-4173}:4173"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - docktutor-net
+
+networks:
+  docktutor-net:
+    driver: bridge
