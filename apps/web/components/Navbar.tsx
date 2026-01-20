@@ -87,7 +87,7 @@ export function Navbar() {
 
             <div className="flex items-center gap-3 pl-2">
                 <a
-                    href="https://github.com/Selimo100/DockTutor" 
+                    href="https://github.com/Selimo100/MogiTutor/" 
                     target="_blank" 
                     rel="noreferrer"
                     className="hidden sm:flex items-center justify-center p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors"

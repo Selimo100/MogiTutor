@@ -1,4 +1,4 @@
-import { fetchTutors } from '@/lib/api';
+import { getAllTutors } from '@/lib/tutors/registry';
 import { TutorCard } from '@/components/TutorCard';
 import { Metadata } from 'next';
 
@@ -7,18 +7,8 @@ export const metadata: Metadata = {
   description: 'Select a tutor to start learning.',
 };
 
-export const dynamic = 'force-dynamic';
-
-export default async function TutorsPage() {
-  let tutors = [];
-  let error = null;
-
-  try {
-     tutors = await fetchTutors();
-  } catch(e) { 
-      console.error("API Fetch Error:", e);
-      error = "Failed to load tutors.";
-  }
+export default function TutorsPage() {
+  const tutors = getAllTutors();
 
   return (
     <div className="container mx-auto px-6 py-24 min-h-screen">
@@ -31,21 +21,11 @@ export default async function TutorsPage() {
                 </p>
             </div>
 
-            {error ? (
-               <div className="p-8 text-destructive border border-destructive/20 bg-destructive/5 rounded-xl">
-                   {error}
-               </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-                    {tutors && tutors.length > 0 ? (
-                        tutors.map((tutor: any, index: number) => (
-                            <TutorCard key={tutor.slug} tutor={tutor} index={index} />
-                        ))
-                    ) : (
-                        <p className="text-muted-foreground">Loading tutors...</p>
-                    )}
-                </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                {tutors.map((tutor, index) => (
+                    <TutorCard key={tutor.slug} tutor={tutor} index={index} />
+                ))}
+            </div>
        </div>
     </div>
   );
