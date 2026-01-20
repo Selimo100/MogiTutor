@@ -27,7 +27,7 @@ export interface TutorConfig {
 export const TUTOR_REGISTRY: Record<string, TutorConfig> = {
   docktutor: {
     slug: 'docktutor',
-    name: 'DockerTutor',
+    name: 'DockTutor',
     shortDescription: 'Master Container Virtualization, Dockerfiles, and Orchestration.',
     icon: '/DockerTutor.png',
     status: 'active',
