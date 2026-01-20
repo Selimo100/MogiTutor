@@ -175,7 +175,7 @@ export function CompetencyEditor({ competency: initialData, tutorSlug, moduleCod
                 className="px-3 py-2 border rounded-md text-sm hover:bg-muted transition-colors"
                 title="Print to PDF"
             >
-                Start Print
+                PDF Export
             </button>
             <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}

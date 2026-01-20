@@ -4,6 +4,7 @@ import { m165Data } from '@/data/m165';
 import Link from 'next/link';
 import { fetchCompetencies } from '@/lib/api';
 import { ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,12 +84,23 @@ function CompetencyMatrix({ bands, dbCompetencies, tutor, module }: { bands: Com
                                 // We use dbComp.code for link if available, or static code
                                 const code = dbComp?.code || c.code;
                                 const description = dbComp?.summary || dbComp?.title || c.description;
+                                const status = dbComp?.status || 'open';
 
                                 return (
                                 <td key={c.id} className="px-6 py-4 align-top w-1/4">
                                      <Link href={`/tutors/${tutor}/modules/${module}/competencies/${code}`} className="group block h-full">
-                                        <div className="p-2 -m-2 rounded hover:bg-primary/5 transition-colors h-full">
-                                            <span className="font-semibold block mb-1 text-primary group-hover:underline decoration-primary/50 underline-offset-4">{code}</span>
+                                        <div className={cn(
+                                            "p-2 -m-2 rounded transition-colors h-full",
+                                            status === 'done' ? "bg-green-500/10 hover:bg-green-500/20" :
+                                            status === 'in_progress' ? "bg-blue-500/10 hover:bg-blue-500/20" :
+                                            "hover:bg-primary/5"
+                                        )}>
+                                            <span className={cn(
+                                                "font-semibold block mb-1 group-hover:underline decoration-primary/50 underline-offset-4",
+                                                status === 'done' ? "text-green-700 dark:text-green-400" :
+                                                status === 'in_progress' ? "text-blue-700 dark:text-blue-400" :
+                                                "text-primary"
+                                            )}>{code}</span>
                                             <span className="text-muted-foreground group-hover:text-foreground transition-colors line-clamp-3">
                                                 {description}
                                             </span>
