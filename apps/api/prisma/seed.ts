@@ -158,8 +158,8 @@ async function main() {
   // 1. Seed Tutors
   const dockTutor = await prisma.tutor.upsert({
       where: { slug: 'docktutor' },
-      update: { name: 'DockerTutor' },
-      create: { slug: 'docktutor', name: 'DockerTutor' }
+      update: { name: 'DockTutor' },
+      create: { slug: 'docktutor', name: 'DockTutor' }
   });
   console.log(`Seeded Tutor: ${dockTutor.name}`);
 

@@ -29,7 +29,7 @@ export function Hero({
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8"
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-sm font-medium mb-8"
         >
           {imageSrc ? (
               <Image src={imageSrc} alt="Logo" width={24} height={24} className="w-6 h-6 object-contain" />

@@ -1,32 +1,28 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border mt-20 py-10 bg-muted/20">
-      <div className="container mx-auto px-4 flex flex-col items-center gap-6">
-        <div className="flex items-center gap-2 opacity-90">
-          <div className="relative w-8 h-8">
+    <footer className="border-t border-border/40 mt-auto bg-muted/30 backdrop-blur-sm">
+      <div className="container mx-auto px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <div className="flex items-center gap-3 opacity-90">
+          <div className="relative w-8 h-8 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
             <Image src="/logo.png" alt="Logo" fill sizes="32px" className="object-contain" />
           </div>
-          <span className="font-semibold tracking-tight text-foreground">
-            MogiTutor
+          <span className="font-semibold tracking-tight text-foreground/80">
+            Mogi<span className="text-secondary">Tutor</span>
           </span>
         </div>
 
-        <div className="text-center text-sm text-muted-foreground space-y-1">
-          <p className="pt-2">
-            &copy; {new Date().getFullYear()} Selina Mogicato. All rights
-            reserved.
-          </p>
+        <div className="flex flex-col md:items-end gap-2 text-sm text-muted-foreground">
           <p>
-            Built with Next.js, Tailwind, & Docker.
+            &copy; {new Date().getFullYear()} Selina Mogicato.
           </p>
-        </div>
-
-        <div className="flex justify-center gap-4">
-          <span className="px-2 py-1 bg-background border border-border rounded text-xs font-mono">
-            v1.0.0
-          </span>
+          <div className="flex gap-4 opacity-70 hover:opacity-100 transition-opacity">
+            <Link href="/" className="hover:text-foreground">Home</Link>
+            <Link href="/tutors" className="hover:text-foreground">Tutors</Link>
+          </div>
         </div>
       </div>
     </footer>
