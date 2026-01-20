@@ -30,13 +30,13 @@ A fullstack application for tracking competency progress in module M347.
 
 Run the entire stack with one command:
 
-\`\`\`bash
+```bash
 pnpm docker:up
 
 # OR
 
 docker compose up --build
-\`\`\`
+```
 
 - **Web**: [http://localhost:4173](http://localhost:4173)
 - **API**: [http://localhost:4180](http://localhost:4180)
@@ -44,26 +44,24 @@ docker compose up --build
 
 ### Development (Local)
 
+For details see [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
+
 1. Start Database:
-   \`\`\`bash
+   ```bash
    docker compose up -d db
-   \`\`\`
+   ```
 2. Install dependencies:
-   \`\`\`bash
+   ```bash
    pnpm install
-   \`\`\`
-3. Run migrations:
-   \`\`\`bash
-   cd apps/api && pnpm migrate:dev
-   \`\`\`
-4. Seed database (creates competencies):
-   \`\`\`bash
-   cd apps/api && pnpm seed
-   \`\`\`
-5. Start dev servers:
-   \`\`\`bash
+   ```
+3. Run migrations & seed:
+   ```bash
+   cd apps/api && pnpm migrate:dev && pnpm seed
+   ```
+4. Start dev servers:
+   ```bash
    pnpm dev
-   \`\`\`
+   ```
 
 ## Features
 
