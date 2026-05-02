@@ -1,4 +1,4 @@
-# DockTutor
+# MogiTutor
 
 A fullstack application for tracking competency progress in module M347.
 
